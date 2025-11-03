@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 Telegram Bot Hub | Código Abierto EL BUHO 89 .ORG SAS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        
+        /* Colores de Marca y Tema Oscuro de Base */
+        :root {
+            --buho-dark: #14161a; /* Dark Blue-Gray */
+            --buho-panel: #1e2024; /* Slightly lighter panel */
+            --buho-gold: #FFC300; /* Primary Accent */
+            --buho-red: #E94560; /* Secondary Accent / Danger */
+            --text-light: #e0e7ff;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--buho-dark);
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+        .card {
+            background-color: var(--buho-panel);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+        }
+        .chat-container {
+            max-height: 40vh; /* Ajuste por el área de entrenamiento */
+            overflow-y: auto;
+            background-color: #0d0f11;
+        }
+        .chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .chat-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        /* Estilos de Disclaimer y Firebase Info mejorados */
+        .info-box {
+            border-left: 4px solid var(--buho-gold);
+            background-color: rgba(255, 195, 0, 0.1);
+            color: var(--text-light);
+        }
+        .disclaimer-box {
+            border-left: 4px solid var(--buho-red);
+            background-color: rgba(233, 69, 96, 0.1);
+        }
+        /* Inputs y Selects */
+        .form-input {
+            background-color: #2a2e33;
+            border-color: rgba(255, 255, 255, 0.15);
+            color: var(--text-light);
+        }
+        .form-input:focus {
+            border-color: var(--buho-gold);
+            box-shadow: 0 0 0 1px var(--buho-gold);
+        }
+        /* Botones */
+        .btn-primary {
+            background-color: var(--buho-gold);
+            color: var(--buho-dark);
+        }
+        .btn-primary:hover {
+            background-color: #f5b700;
+        }
+        .btn-danger {
+            background-color: var(--buho-red);
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #d83d53;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 flex items-center justify-center min-h-screen">
+
+    <div id="app-container" class="w-full max-w-4xl">
+        <h1 class="text-3xl font-extrabold text-white mb-8 text-center border-b pb-4 border-gray-700">
+            🤖 EL BUHO 89 HUB Bot Modular (Código Abierto)
+        </h1>
+
+        <div class="card disclaimer-box rounded-xl p-4 mb-6">
+            <h2 class="text-xl font-bold text-buho-red mb-2">⚠️ Descargo de Responsabilidad, Limitación de Servicio y Riesgo Operacional</h2>
+            <p class="text-sm font-semibold mb-2">
+                Este software es un *framework* de código abierto proporcionado por **EL BUHO 89 .ORG SAS**. No garantizamos la operatividad continua (24/7) de esta área web. NO almacenamos ni recopilamos sus datos. La ejecución del bot mediante Polling en el navegador es inestable. Si usted cierra la pestaña o el navegador, la ejecución del script se detendrá inmediatamente y no se recibirán más mensajes de Telegram. Al continuar en esta area de la web y/o ejecutar el codigo usted confirma que he leído y aceptado todas nuestras <a href="/legal">politicas y condiciones</a>.
+
+
+
+<p class="text-xs text-gray-500 mt-4 text-center">
+  © 2025 EL BUHO 89 .ORG S.A.S. — Distribuido bajo licencia 
+  <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" class="text-buho-gold hover:underline">
+    CC BY-NC-SA 4.0
+  </a>
+  <br>
+  <img src="https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png" alt="Licencia Creative Commons BY-NC-SA 4.0" class="mx-auto mt-2">
+</p>
+            </p>
+        </div>
+        <div class="card rounded-xl p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4 text-buho-gold">Configuración Operacional del Bot</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div>
+                    <label for="aiModel" class="block text-sm font-medium text-gray-400">Modelo de IA (Multi-API)</label>
+                    <select id="aiModel" class="mt-1 block w-full rounded-lg form-input shadow-sm p-2 border">
+                        <option value="NONE" selected>Sin IA (Solo Reenvío Humano)</option>
+                        <option value="GEMINI">Google Gemini (Modelo por defecto)</option>
+                        <option value="CHATGPT">OpenAI ChatGPT</option>
+                        <option value="PERPLEXITY">Perplexity</option>
+                        <option value="OTHER">Otra IA (Requiere adaptación de código)</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="aiApiKey" class="block text-sm font-medium text-gray-400">Clave API de la IA seleccionada (p. ej., `AIzaSy...`)</label>
+                    <input type="password" id="aiApiKey" value="" class="mt-1 block w-full rounded-lg form-input shadow-sm p-2 border" placeholder="Ingresa la clave API (se mantiene privada)">
+                    <p class="text-xs text-gray-500 mt-1">Nota: La lógica base de JS utiliza la estructura de llamada de Gemini por defecto.</p>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label for="customSystemPrompt" class="block text-sm font-bold text-gray-400">⚙️ Instrucción de Entrenamiento (System Prompt / Personalidad)</label>
+                <textarea id="customSystemPrompt" rows="4" class="mt-1 block w-full rounded-lg form-input shadow-sm p-2 border">Eres un asistente de servicio al cliente amable llamado 'Juan™'. Tu objetivo es ayudar al usuario a encontrar información sobre nuestros productos y servicios publicados en 'www.ejemplo.com' Si el usuario pide un 'asesor', 'humano', o 'agente', responde con: 'Comprendido. Te conecto con un asesor humano en este momento. Por favor, espera unos instantes, la persona a cargo te responderá directamente aquí en el chat.' y activa el handoff.</textarea>
+                <p class="text-xs text-gray-500 mt-1">Define la personalidad, el tono y la regla de activación del Handoff de la IA.</p>
+            </div>
+            
+            <div class="mb-6">
+                <label for="dataProcessingMessage" class="block text-sm font-bold text-gray-400">📝 Mensaje de Consentimiento (/start o /iniciar)</label>
+                <textarea id="dataProcessingMessage" rows="2" class="mt-1 block w-full rounded-lg form-input shadow-sm p-2 border">¡Hola! al continuar en este chat aceptas nuestras politicas y el tratamiento de tus datos personales ¿Cómo puedo ayudarte hoy?</textarea>
+                <p class="text-xs text-gray-500 mt-1">Aviso legal y de datos personales que el cliente recibe al comenzar la interacción.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div class="md:col-span-2">
+                    <label for="botToken" class="block text-sm font-medium text-gray-400">Token de Bot de Telegram</label>
+                    <input type="text" id="botToken" value="" class="mt-1 block w-full rounded-lg form-input shadow-sm p-2 border" placeholder="Ej: 123456789:AABBCC-DDEEFF..">
+                </div>
+                <div>
+                    <label for="advisorId" class="block text-sm font-medium text-gray-400">IDs de Chat de Asesores (Telegram)</label>
+                    <input type="text" id="advisorId" value="" class="mt-1 block w-full rounded-lg form-input shadow-sm p-2 border" placeholder="Ej: 0000000, 123456789, -9876XXXX">
+                    <p class="text-xs text-gray-500 mt-1">Separa cada ID con una coma. Use ID negativo para Grupos.</p>
+                </div>
+            </div>
+
+            <div class="mt-6 p-4 bg-gray-800 rounded-lg border border-gray-700">
+                <h3 class="text-lg font-bold text-buho-gold mb-2">Guía de Comandos para Asesores y Grupos</h3>
+                <p class="text-sm font-mono text-gray-300">
+                    *Para **Responder** a un cliente*: <span class="font-bold text-blue-400">`/CHATID tu respuesta aquí`</span><br>
+                    *Para **Cerrar** el chat (pasar a IA)*: <span class="font-bold text-buho-red">`/close CHATID`</span><br>
+                    *Para **Tomar** o **Asignar** un chat*: <span class="font-bold text-green-400">`/take CHATID`</span>
+                </p>
+                <p class="text-xs text-gray-500 mt-1">Reemplace `CHATID` con el ID del cliente recibido en la notificación (ej: `/987654321 Hola`).</p>
+                <p class="text-xs text-gray-500 mt-1">El comando `/take` es útil si la notificación fue a un grupo y desea confirmar quién lo atiende.
+                </p>
+                <hr class="my-2 border-gray-700">
+                <h4 class="text-md font-bold text-gray-400">Cómo Obtener su ID de Chat/Grupo</h4>
+                <p class="text-xs text-gray-500">
+                    1. **Asesor (Individual):** Envíe un mensaje `/start` al bot <a href="https://t.me/userinfobot">@userinfobot</a>.<br>
+                    2. **Grupo de Soporte (Recomendado):** Agregue el bot @userinfobot al grupo, hágalo admin, y el ID aparecerá en el chat del grupo (será un número **negativo**).
+                </p>
+            </div>
+            
+            <div class="mt-8">
+                <div class="flex items-center justify-center mb-4 space-x-2">
+                    <input type="checkbox" id="acceptPolicies" class="form-checkbox h-5 w-5 text-buho-gold rounded focus:ring-buho-gold border-gray-600 bg-gray-700">
+                    <label for="acceptPolicies" class="text-sm cursor-pointer hover:text-buho-gold">
+                        Confirmo que he leído y acepto el <a href="/legal">Descargo de Responsabilidad</a>, las <a href="/legal">Condiciones de Operación</a>, las <a href="/legal">politicas de uso justo</a> y las <a href="/legal">Condiciones de codigo abierto</a>.
+                    </label>
+                </div>
+                
+                <div id="recaptcha-placeholder" class="flex justify-center mb-4">
+                    <div class="g-recaptcha" 
+                         data-sitekey="6LeuAO0hAAAAAPCDYDWMc0iOlowBie2kVQ2O9dXK" 
+                         data-callback="recaptchaCallback" 
+                         data-expired-callback="recaptchaExpired">
+                    </div>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                    <button id="startButton" disabled
+                        class="btn-primary font-bold py-3 px-8 rounded-xl shadow-lg transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed">
+                        ▶️ Iniciar Polling (Escuchar Mensajes)
+                    </button>
+                    <button id="stopButton" class="btn-danger font-bold py-3 px-8 rounded-xl shadow-lg transition duration-150 ease-in-out" disabled>
+                        ⏹️ Detener Polling
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="card rounded-xl p-6">
+            <h2 class="text-2xl font-semibold mb-4 text-buho-gold">Registro de Actividad (Log)</h2>
+            <div id="status" class="mb-4 font-semibold text-sm text-center p-2 rounded-xl bg-blue-900 text-blue-100">
+                Cargando configuración de Firebase...
+            </div>
+            <div id="chatLog" class="chat-container bg-gray-900 p-4 rounded-xl chat-log text-gray-300">
+                <p class="text-gray-500">Aquí se mostrará la actividad: mensajes recibidos, respuestas de la AI y notificaciones de handoff.</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // setLogLevel('Debug'); // Habilitar si se necesita depuración de Firestore
+
+        // Variables Globales de Canvas (Usadas para persistencia de datos en el entorno de Canvas)
+        const APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const FIREBASE_CONFIG = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const INITIAL_AUTH_TOKEN = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db, auth, userId;
+        let isFirebaseReady = false; 
+        let inMemorySessions = new Map(); 
+        
+        let stopPollingFlag = false; 
+        let lastUpdateId = 0; 
+
+        // Referencias de UI
+        const logElement = document.getElementById('chatLog');
+        const statusElement = document.getElementById('status');
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const botTokenInput = document.getElementById('botToken');
+        const advisorIdInput = document.getElementById('advisorId');
+        const aiApiKeyInput = document.getElementById('aiApiKey');
+        const aiModelSelector = document.getElementById('aiModel');
+        const customSystemPromptInput = document.getElementById('customSystemPrompt');
+        const dataProcessingMessageInput = document.getElementById('dataProcessingMessage');
+        const acceptPoliciesCheckbox = document.getElementById('acceptPolicies');
+
+        // Variables de Configuración
+        let botToken = "";
+        let advisorIds = []; 
+        let aiApiKey = ""; 
+        let currentAiModel = "NONE"; 
+        let customSystemPrompt = ""; 
+        let dataProcessingMessage = "";
+        
+        function isAdvisorChat(chatId) {
+            return advisorIds.includes(String(chatId));
+        }
+
+        // --- Utilidades de Logging ---
+        function log(message, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            let color = 'text-gray-300';
+            if (type === 'error') color = 'text-red-400 font-bold';
+            if (type === 'success') color = 'text-green-400';
+            if (type === 'system') color = 'text-blue-400';
+            if (type === 'warning') color = 'text-yellow-400';
+
+            const p = document.createElement('p');
+            p.className = `p-1 border-b border-gray-700 ${color}`;
+            p.innerHTML = `<span class="text-xs text-gray-500 mr-2">[${time}]</span>${message}`;
+            logElement.prepend(p);
+            while (logElement.children.length > 50) {
+                logElement.removeChild(logElement.lastChild);
+            }
+            logElement.scrollTop = 0; 
+        }
+
+        function setStatus(message, colorClass = 'bg-yellow-900 text-yellow-100') {
+            statusElement.className = `mb-4 font-semibold text-sm text-center p-2 rounded-xl ${colorClass}`;
+            statusElement.textContent = message;
+        }
+
+        // --- FIREBASE / AUTH / INIT ---
+        async function initializeFirebase() {
+            try {
+                if (Object.keys(FIREBASE_CONFIG).length === 0) {
+                     throw new Error("La configuración de Firebase está vacía. Usando modo sin persistencia.");
+                }
+
+                const app = initializeApp(FIREBASE_CONFIG);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                if (INITIAL_AUTH_TOKEN) {
+                    await signInWithCustomToken(auth, INITIAL_AUTH_TOKEN);
+                    log("Autenticación con token exitosa.", 'success');
+                } else {
+                    await signInAnonymously(auth);
+                    log("Iniciando sesión de forma anónima.", 'warning');
+                }
+
+                userId = auth.currentUser?.uid || crypto.randomUUID();
+                isFirebaseReady = true;
+                return true;
+
+            } catch (error) {
+                log(`Error al inicializar Firebase. Modo en memoria activado. Detalle: ${error.message}`, 'error');
+                isFirebaseReady = false;
+                return false;
+            }
+        }
+
+        // --- Funciones de persistencia de sesiones ---
+        
+        const DEFAULT_SESSION = { status: 'AI', history: [], customer_username: 'Unknown', start_message_sent: false };
+
+        function getSessionDocRef(chatId) {
+            // Ruta para datos públicos (sesiones compartidas o persistentes)
+            return doc(db, 'artifacts', APP_ID, 'public', 'data', 'bot_sessions', String(chatId));
+        }
+        
+        function getGlobalStateDocRef() {
+            // Ruta para el estado global (último update ID)
+            return doc(db, 'artifacts', APP_ID, 'public', 'data', 'bot_state', 'global');
+        }
+
+        async function getSessionData(chatId) {
+            let session = DEFAULT_SESSION;
+            if (isFirebaseReady) {
+                try {
+                    const sessionRef = getSessionDocRef(chatId);
+                    const sessionSnap = await getDoc(sessionRef);
+                    if (sessionSnap.exists()) {
+                        // Usar el spread para asegurar que los campos por defecto existan si están ausentes
+                        session = { ...DEFAULT_SESSION, ...sessionSnap.data() }; 
+                    }
+                } catch (e) {
+                    // console.error(e);
+                    log(`Error al cargar sesión de Firestore (${chatId}). Usando sesión por defecto.`, 'error');
+                }
+            } else {
+                session = inMemorySessions.get(chatId) || DEFAULT_SESSION;
+            }
+            return { ...DEFAULT_SESSION, ...session };
+        }
+
+        async function saveSessionData(chatId, sessionData) {
+            if (isFirebaseReady) {
+                try {
+                    const sessionRef = getSessionDocRef(chatId);
+                    await setDoc(sessionRef, sessionData, { merge: true });
+                } catch (e) {
+                    // console.error(e);
+                    log(`Error al guardar sesión en Firestore (${chatId}). No se guardaron los cambios.`, 'error');
+                }
+            } else {
+                inMemorySessions.set(chatId, sessionData);
+            }
+        }
+        
+        async function addToHistory(chatId, role, text) {
+            const session = await getSessionData(chatId);
+            const MAX_HISTORY_LENGTH = 30; 
+            
+            // Usar 'user' o 'model' para roles compatibles con Gemini
+            const geminiRole = role === 'user' ? 'user' : 'model'; 
+            
+            const newEntry = { role: geminiRole, text: text, timestamp: new Date().toISOString() };
+            session.history.push(newEntry);
+            
+            if (session.history.length > MAX_HISTORY_LENGTH) {
+                // Mantiene los últimos 30 mensajes
+                session.history = session.history.slice(-MAX_HISTORY_LENGTH); 
+            }
+
+            await saveSessionData(chatId, session);
+            return session; 
+        }
+
+        // --- GEMINI API Configuration and Call ---
+        const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=";
+        
+        let API_KEY = "";
+
+        /**
+         * Función unificada para obtener respuesta de AI.
+         */
+        async function getAIResponse(history) {
+            if (currentAiModel === "NONE") {
+                return { text: null, handoff_needed: true }; 
+            }
+
+            if (!API_KEY) {
+                return { text: `Error: La Clave API para ${currentAiModel} no está configurada.`, handoff_needed: true };
+            }
+            
+            // Revertir el historial para que el último mensaje (el del cliente) sea el último item en contents
+            // Gemini espera [{role: 'user', parts: ...}, {role: 'model', parts: ...}, ...]
+            const contents = history.map(item => ({
+                role: item.role, 
+                parts: [{ text: item.text }]
+            }));
+            
+            log(`Llamando a ${currentAiModel} (Conversación de ${contents.length} turnos)...`, 'system');
+            
+            const systemInstructionToUse = customSystemPrompt; 
+            const handoffTriggerCheck = "Te conecto con un asesor humano en este momento.";
+
+
+            const payload = {
+                contents: contents,
+                systemInstruction: { parts: [{ text: systemInstructionToUse }] }, 
+            };
+
+            for (let i = 0; i < 3; i++) {
+                try {
+                    // En este proyecto de código abierto, la URL de Gemini se usa como la implementación base.
+                    const response = await fetch(GEMINI_API_URL + API_KEY, { 
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        if (i < 2 && response.status === 429) { 
+                            log(`Error en llamada a ${currentAiModel} (Reintento ${i + 1}): Tasa limitada (429). Esperando ${Math.pow(2, i)}s.`, 'warning');
+                            await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+                            continue;
+                        } else if (i < 2) {
+                            log(`Error en llamada a ${currentAiModel} (Reintento ${i + 1}): HTTP: ${response.status}`, 'warning');
+                            await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+                            continue;
+                        }
+                        throw new Error(`Error HTTP: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const text = result?.candidates?.[0]?.content?.parts?.[0]?.text || `Lo siento, ${currentAiModel} no pudo generar una respuesta.`;
+                    
+                    const handoffNeeded = text.includes(handoffTriggerCheck);
+
+                    return { text: text, handoff_needed: handoffNeeded };
+
+                } catch (error) {
+                    // console.error(error);
+                    if (i === 2) {
+                        log(`Error final al llamar a ${currentAiModel}: ${error.message}.`, 'error');
+                        return { text: `Lo siento, hubo un problema grave al contactar a la inteligencia artificial (${currentAiModel}). Pasando a soporte humano.`, handoff_needed: true };
+                    }
+                }
+            }
+            return { text: `Lo siento, no pude generar una respuesta de ${currentAiModel}. Pasando a soporte humano.`, handoff_needed: true }; 
+        }
+
+        // --- TELEGRAM BOT API ---
+        function getTelegramApiUrl(method) {
+            return `https://api.telegram.org/bot${botToken}/${method}`;
+        }
+
+        async function telegramApiCall(method, data) {
+            if (!botToken) return { ok: false };
+
+            const url = getTelegramApiUrl(method);
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (!result.ok && result.description !== "Timeout") {
+                    log(`Error de Telegram en ${method}: ${result.description}`, 'error');
+                }
+                return result;
+            } catch (e) {
+                log(`Error de red al llamar a Telegram: ${e.message}`, 'error');
+                return { ok: false };
+            }
+        }
+
+        async function sendMessage(chatId, text, replyMarkup = null) {
+            const data = {
+                chat_id: chatId,
+                text: text,
+                parse_mode: 'Markdown',
+            };
+            if (replyMarkup !== null) { data.reply_markup = replyMarkup; }
+            return telegramApiCall('sendMessage', data);
+        }
+
+        async function deleteWebhook() {
+            log("Limpiando Webhook y actualizaciones pendientes...", 'warning');
+            const data = { drop_pending_updates: true };
+            const result = await telegramApiCall('deleteWebhook', data);
+            if (result.ok) {
+                log("Webhook limpiado con éxito.", 'success');
+            } else {
+                log(`Error al limpiar Webhook: ${result.description}`, 'error');
+            }
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        // --- Handoff Logic ---
+        async function handleHandoff(chatId, username, text, session) {
+            const handoffMessage = "Comprendido. Te conecto con un asesor humano en este momento. Por favor, espera unos instantes, la persona a cargo te responderá directamente aquí en el chat.";
+            
+            await sendMessage(chatId, handoffMessage);
+            await addToHistory(chatId, 'model', handoffMessage); 
+            
+            session.status = 'HUMAN';
+            session.customer_username = username;
+            // No se asigna el asesor aquí, se espera el comando /take si es un grupo
+            await saveSessionData(chatId, session); 
+
+            const notification = `🚨 *NUEVA SOLICITUD DE ASESOR* 🚨\n\n*Cliente:* ${username} (ID: \`${chatId}\`)\n*Último Mensaje:* ${text}\n\n*Para tomar y responder, usa:*\n\` /take ${chatId} \`\n\n*Para responder, usa el formato:*\n\`/${chatId} tu respuesta aquí\`\n\n*Para cerrar el chat, usa:*\n\` /close ${chatId} \``;
+            
+            for (const advisorId of advisorIds) {
+                await sendMessage(advisorId, notification);
+            }
+
+            log(`Handoff iniciado. Notificación enviada a ${advisorIds.length} Asesor(es).`, 'warning');
+        }
+
+        async function processUpdate(update) {
+            if (!update.message || !update.message.text) return;
+
+            const message = update.message;
+            const text = message.text.trim();
+            const chatId = String(message.chat.id); 
+            const advisorUsername = message.from.username || message.from.first_name || 'Asesor';
+            
+            // 1. Manejar mensajes del ASESOR (Comandos /close, /take y /CHATID respuesta)
+            if (isAdvisorChat(chatId)) {
+
+                // COMANDO /CLOSE
+                const closeMatch = text.match(/^\/close\s+(\d+)$/i); 
+                if (closeMatch) {
+                    const targetChatId = closeMatch[1];
+                    const session = await getSessionData(targetChatId);
+                    if (session.status === 'HUMAN') {
+                        session.status = 'AI'; 
+                        session.advisor_assigned = null; // Desasignar asesor
+                        const closeMessage = "El soporte humano ha finalizado. Ahora vuelves a hablar con el asistente de IA. Si necesitas algo más, pregunta libremente. ¡Gracias por contactarnos!";
+                        await sendMessage(targetChatId, "✅ " + closeMessage);
+                        await addToHistory(targetChatId, 'model', closeMessage); 
+                        await saveSessionData(targetChatId, session); 
+                        await sendMessage(chatId, `✅ *Chat Finalizado:* La sesión del cliente ${targetChatId} ha vuelto al modo AI.`);
+                    } else {
+                        await sendMessage(chatId, `⚠️ *Advertencia:* La sesión del cliente ${targetChatId} ya estaba en modo AI o no existe (Estado actual: ${session.status}).`);
+                    }
+                    return; 
+                }
+                
+                // COMANDO /TAKE (Tomar posesión del chat)
+                const takeMatch = text.match(/^\/take\s+(\d+)$/i); 
+                if (takeMatch) {
+                    const targetChatId = takeMatch[1];
+                    const session = await getSessionData(targetChatId);
+                    
+                    if (session.status === 'HUMAN') {
+                        if (session.advisor_assigned && session.advisor_assigned !== chatId) {
+                            await sendMessage(chatId, `⚠️ *Chat Ocupado:* La sesión del cliente ${targetChatId} ya está asignada al asesor \`${session.advisor_assigned}\`.`);
+                        } else {
+                            session.advisor_assigned = chatId; 
+                            await saveSessionData(targetChatId, session); 
+                            await sendMessage(chatId, `✅ *Chat Asignado:* Has tomado la conversación del cliente ${targetChatId}.`);
+                        }
+                    } else {
+                        await sendMessage(chatId, `🚫 *Error:* La sesión del cliente ${targetChatId} no está en modo HUMANO.`);
+                    }
+                    return; 
+                }
+
+                // COMANDO DE RESPUESTA
+                const match = text.match(/^\/(\d+)\s+(.+)$/s);
+                if (match) {
+                    const targetChatId = match[1];
+                    const replyText = match[2];
+                    const session = await getSessionData(targetChatId);
+                    const responderUsername = message.from.first_name || message.from.username || "Agente";
+
+                    if (session.status === 'HUMAN') {
+                        const finalReply = `*Agente ${responderUsername}:* ${replyText}`; // Respuesta con nombre de asesor
+                        await sendMessage(targetChatId, finalReply);
+                        await addToHistory(targetChatId, 'model', finalReply); 
+                    } else {
+                        await sendMessage(chatId, `🚫 *Error:* No se pudo enviar la respuesta a ${targetChatId}. La sesión no está activa o en modo humano.`);
+                    }
+                    return; 
+                }
+                return; 
+            }
+            
+            // 2. Manejar mensajes del CLIENTE
+            log(`Mensaje de Cliente ${advisorUsername} (${chatId}): "${text}"`, 'info');
+            let session = await getSessionData(chatId);
+
+            // Lógica: Mensaje de Procesamiento de Datos con /start
+            const isStartCommand = text.toLowerCase() === '/start' || text.toLowerCase() === '/iniciar';
+
+            if (isStartCommand) {
+                if (!session.start_message_sent) {
+                    await sendMessage(chatId, dataProcessingMessage);
+                    await addToHistory(chatId, 'model', dataProcessingMessage);
+                    session.start_message_sent = true;
+                    await saveSessionData(chatId, session);
+                    log('Mensaje de consentimiento de datos enviado.', 'success');
+                } else {
+                    // Si ya se envió, reenviar el mensaje de bienvenida de la IA (sin agregarlo al historial para evitar ruido)
+                    const tempSession = await addToHistory(chatId, 'user', text); 
+                    const { text: aiResponse } = await getAIResponse(tempSession.history);
+                    if (aiResponse) {
+                        await sendMessage(chatId, aiResponse);
+                        tempSession.history.pop();
+                        await saveSessionData(chatId, tempSession);
+                    }
+                }
+                return;
+            }
+            
+            // Si no es /start, agregamos el mensaje al historial de la IA
+            session = await addToHistory(chatId, 'user', text); 
+
+
+            const triggerKeywords = ["asesor", "humano", "persona", "agente", "soporte", "operador"];
+            const isHandoffRequestExplicit = triggerKeywords.some(keyword => text.toLowerCase().includes(keyword));
+
+            if (session.status === 'AI') {
+                
+                if (currentAiModel === "NONE" || isHandoffRequestExplicit) {
+                    log(`Handoff forzado (Modelo: ${currentAiModel} | Palabra Clave: ${isHandoffRequestExplicit}).`, 'warning');
+                    await handleHandoff(chatId, advisorUsername, text, session);
+                } else {
+                    const { text: aiResponse, handoff_needed } = await getAIResponse(session.history);
+                    
+                    if (handoff_needed) {
+                        log('Handoff sugerido por la IA o por error.', 'warning');
+                        if (aiResponse) {
+                             await sendMessage(chatId, aiResponse);
+                             await addToHistory(chatId, 'model', aiResponse);
+                        }
+                        await handleHandoff(chatId, advisorUsername, text, session);
+                    } else {
+                        await sendMessage(chatId, aiResponse);
+                        await addToHistory(chatId, 'model', aiResponse); 
+                        log(`Respuesta de AI (${currentAiModel}) enviada a ${advisorUsername}.`, 'system');
+                    }
+                }
+
+            } else if (session.status === 'HUMAN') {
+                // Sesión en modo humano, reenviar el mensaje a TODOS los asesores
+                const assigned = session.advisor_assigned ? `Asignado a: \`${session.advisor_assigned}\`\n` : '';
+                const notification = `🗣️ *Mensaje Cliente ${advisorUsername}* (ID: \`${chatId}\`)\n${assigned}\n*Mensaje:* ${text}\n\n*Para responder, usa:*\n\`/${chatId} tu respuesta aquí\`\n\n*Para cerrar el chat, usa:*\n\` /close ${chatId} \``;
+                
+                for (const advisorId of advisorIds) {
+                    await sendMessage(advisorId, notification);
+                }
+                log(`Mensaje reenviado a ${advisorIds.length} Asesor(es).`, 'warning');
+            }
+        }
+
+        // --- CORE LOGIC: Polling Loop ---
+
+        async function fetchUpdates() {
+            if (!botToken || advisorIds.length === 0) return;
+
+            if (isFirebaseReady) {
+                try {
+                    const stateDoc = await getDoc(getGlobalStateDocRef());
+                    if (stateDoc.exists()) {
+                        lastUpdateId = stateDoc.data().lastUpdateId || 0;
+                    }
+                } catch (e) {
+                    log(`Error al cargar el último Update ID: ${e.message} (Usando ID local: ${lastUpdateId})`, 'error');
+                }
+            }
+
+            log(`[Polling] Esperando nuevos mensajes (timeout 30s) desde update ID: ${lastUpdateId + 1}...`, 'system');
+            
+            const data = { offset: lastUpdateId + 1, timeout: 30 };
+            const result = await telegramApiCall('getUpdates', data);
+
+            if (result.ok && result.result && result.result.length > 0) {
+                const updates = result.result;
+                const newLastUpdateId = updates[updates.length - 1].update_id;
+
+                log(`[Polling] ${updates.length} mensaje(s) recibido(s). Procesando...`, 'success');
+
+                for (const update of updates) {
+                    await processUpdate(update);
+                }
+
+                lastUpdateId = newLastUpdateId;
+                if (isFirebaseReady) {
+                    await setDoc(getGlobalStateDocRef(), { lastUpdateId: lastUpdateId }, { merge: true });
+                }
+            } else if (result.ok) {
+                 log(`[Polling] Tiempo de espera (timeout) expirado. Reiniciando ciclo de escucha.`, 'info');
+            }
+        }
+
+
+        async function pollingLoop() {
+            if (stopPollingFlag) {
+                return;
+            }
+            
+            await fetchUpdates();
+
+            // Pequeña pausa de 500ms antes del siguiente ciclo
+            setTimeout(pollingLoop, 500); 
+        }
+
+        // --- CONTROL DE ESTADO DEL BOTÓN DE INICIO (NUEVA FUNCIÓN UNIFICADA) ---
+        function updateStartButtonState() {
+            // Verificar el estado del checkbox de políticas (local)
+            const policiesAccepted = acceptPoliciesCheckbox.checked;
+            // Verificar el estado del reCAPTCHA (global)
+            const isVerified = window.isRecaptchaVerified || false;
+            
+            // El botón se habilita SÓLO si ambas son verdaderas
+            startButton.disabled = !(policiesAccepted && isVerified);
+        }
+        
+        // Hacer la función accesible globalmente para el callback de reCAPTCHA
+        window.updateStartButtonState = updateStartButtonState; 
+        
+        // --- CONTROL DE POLLING ---
+
+        async function startPolling() {
+            
+            // 1. Validation
+            botToken = botTokenInput.value.trim();
+            advisorIds = advisorIdInput.value.split(',').map(id => id.trim()).filter(id => id.length > 0);
+            aiApiKey = aiApiKeyInput.value.trim();
+            currentAiModel = aiModelSelector.value;
+            customSystemPrompt = customSystemPromptInput.value;
+            dataProcessingMessage = dataProcessingMessageInput.value;
+
+            if (!botToken) {
+                setStatus("🔴 Error: El Token del Bot de Telegram es obligatorio.", 'bg-red-900 text-red-200');
+                return;
+            }
+            if (advisorIds.length === 0) {
+                setStatus("🔴 Error: Debe ingresar al menos un Chat ID de Asesor.", 'bg-red-900 text-red-200');
+                return;
+            }
+            if (currentAiModel !== "NONE" && !aiApiKey) {
+                 setStatus(`🔴 Error: Seleccionaste ${currentAiModel}. La Clave API es obligatoria.`, 'bg-red-900 text-red-200');
+                 return;
+            }
+            
+            // Set API Key from input value
+            API_KEY = aiApiKey;
+
+            // 2. UI State
+            stopPollingFlag = false;
+            startButton.disabled = true; // Se mantiene deshabilitado durante el inicio
+            stopButton.disabled = false;
+            setStatus(`🟢 Inicializando sistema de Handoff y AI. Por favor, espere la limpieza del Webhook.`, 'bg-green-900 text-green-200');
+
+            // 3. Initialization
+            if (!isFirebaseReady) {
+                 await initializeFirebase();
+            }
+
+            // 4. Clean up and Start Loop
+            await deleteWebhook(); // Clean up potential previous hooks
+            
+            setStatus(`🟡 Escuchando mensajes de Telegram (Polling activo).`, 'bg-yellow-900 text-yellow-100');
+            log(`Sistema HUB iniciado. Token válido, ${advisorIds.length} asesores configurados. Modo AI: ${currentAiModel}`, 'success');
+            
+            // Start the loop
+            pollingLoop();
+        }
+
+        function stopPolling() {
+            stopPollingFlag = true;
+            acceptPoliciesCheckbox.checked = false; // Desmarcar para deshabilitar el botón de inicio
+            window.isRecaptchaVerified = false; // Forzar verificación de reCAPTCHA
+            if (typeof grecaptcha !== 'undefined') {
+                grecaptcha.reset(); 
+            }
+            updateStartButtonState(); // Deshabilita el botón de inicio
+            stopButton.disabled = true;
+            setStatus("⚫ Polling detenido por el usuario. No se recibirán más mensajes.", 'bg-gray-700 text-gray-200');
+            log("Polling detenido. El sistema dejará de escuchar Telegram.", 'system');
+        }
+
+        // --- EVENT LISTENERS ---
+        // Listener para el checkbox de políticas
+        acceptPoliciesCheckbox.addEventListener('change', updateStartButtonState);
+
+        // Attach event listeners
+        startButton.addEventListener('click', startPolling);
+        stopButton.addEventListener('click', stopPolling);
+        
+        // Initial setup check
+        window.addEventListener('load', async () => {
+            const fbReady = await initializeFirebase();
+            if (fbReady) {
+                setStatus("Listo para iniciar. Ingrese las credenciales de Telegram e IA y acepte las condiciones.", 'bg-blue-900 text-blue-100');
+            } else {
+                 setStatus("Modo en Memoria/Sin Persistencia. Listo para iniciar. Acepte las condiciones.", 'bg-orange-900 text-orange-200');
+            }
+            updateStartButtonState(); // Inicializa el estado del botón al cargar
+        });
+
+    </script>
+    
+    <script>
+        // Inicializar la variable global
+        window.isRecaptchaVerified = false; 
+        
+        // Función llamada cuando el usuario verifica el reCAPTCHA
+        function recaptchaCallback(token) {
+            window.isRecaptchaVerified = true;
+            // Llamar a la función del módulo (si está cargada)
+            if (window.updateStartButtonState) {
+                window.updateStartButtonState();
+            }
+        }
+
+        // Función llamada cuando el token de reCAPTCHA expira
+        function recaptchaExpired() {
+            window.isRecaptchaVerified = false;
+            if (window.updateStartButtonState) {
+                window.updateStartButtonState();
+            }
+            if (typeof grecaptcha !== 'undefined') {
+                grecaptcha.reset(); 
+            }
+        }
+    </script>
+
+
+</body>
+</html>
